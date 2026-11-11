@@ -1,19 +1,13 @@
 {
-  "id": "/",
-  "name": "Minhas Despesas",
-  "short_name": "Despesas",
-  "description": "Controle de despesas mensais com contas recorrentes, vencimentos e backup.",
-  "lang": "pt-BR",
-  "start_url": "/",
-  "scope": "/",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#f4f2ea",
-  "theme_color": "#0e5c41",
-  "categories": ["finance", "productivity"],
-  "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ]
+  "name": "minhas-despesas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Controle de despesas mensais",
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  }
 }

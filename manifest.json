@@ -1,13 +1,38 @@
 {
-  "name": "minhas-despesas",
-  "version": "1.0.0",
-  "private": true,
+  "name": "Minhas Despesas",
+  "short_name": "Despesas",
   "description": "Controle de despesas mensais",
-  "dependencies": {
-    "@capacitor/android": "^6.0.0",
-    "@capacitor/core": "^6.0.0"
-  },
-  "devDependencies": {
-    "@capacitor/cli": "^6.0.0"
-  }
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f5fb",
+  "theme_color": "#2457e6",
+  "orientation": "portrait",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }

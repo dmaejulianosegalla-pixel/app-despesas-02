@@ -990,39 +990,46 @@
       });
     });
 
-    // ---------- Exportação Definitiva (Share Nativo + Base64) ----------
+    // ---------- Exportação Definitiva (Capacitor + Fallback Web) ----------
 
     exportarBtn.addEventListener("click", async () => {
       const dados = localStorage.getItem(STORAGE_KEY) || "[]";
       const dataAtual = new Date().toISOString().slice(0, 10);
       const nomeArquivo = `backup-despesas-${dataAtual}.json`;
 
-      // 1. Tenta Compartilhamento Nativo do Android
-      if (navigator.share && navigator.canShare) {
+      // 1. Verifica se está rodando dentro do APK (Capacitor)
+      if (window.Capacitor && window.Capacitor.Plugins) {
         try {
-          const blob = new Blob([dados], { type: "application/json" });
-          const file = new File([blob], nomeArquivo, { type: "application/json" });
+          const { Filesystem, Share } = window.Capacitor.Plugins;
           
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: 'Backup de Despesas',
-              text: 'Salve no Drive ou envie para você mesmo.'
-            });
-            return; // Se compartilhou com sucesso, encerra o código aqui.
-          }
+          // Salva o arquivo no cache do app
+          const result = await Filesystem.writeFile({
+            path: nomeArquivo,
+            data: dados,
+            directory: 'CACHE',
+            encoding: 'utf8'
+          });
+
+          // Abre o menu de compartilhamento nativo do Android
+          await Share.share({
+            title: 'Salvar Backup',
+            text: 'Escolha onde salvar o backup das suas despesas.',
+            url: result.uri,
+            dialogTitle: 'Salvar backup'
+          });
+          
+          return; // Encerra aqui se funcionar no APK
         } catch (error) {
-          // Se o usuário cancelou o compartilhamento, não faz nada e nem tenta baixar
-          if (error.name === 'AbortError') return;
+          console.error("Erro nativo:", error);
+          // Se der erro, tenta o método web abaixo
         }
       }
 
-      // 2. Forçar download via Data URI (Contorna o bloqueio do Android WebView)
+      // 2. Método tradicional (Navegador Desktop)
       try {
         const bytes = new TextEncoder().encode(dados);
         const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
         const base64 = btoa(binString);
-        
         const dataUri = `data:application/json;base64,${base64}`;
         
         const a = document.createElement("a");
@@ -1032,7 +1039,6 @@
         a.click();
         document.body.removeChild(a);
       } catch (err) {
-        // 3. Fallback final para navegadores Desktop
         const blob = new Blob([dados], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");

@@ -27,6 +27,11 @@ jobs:
     - name: Instalar dependências
       run: npm install
 
+    - name: Preparar arquivos web na pasta www
+      run: |
+        mkdir -p www
+        cp index.html manifest.json sw.js icon-192.png icon-512.png www/
+
     - name: Adicionar plataforma Android
       run: npx cap add android
 

@@ -8,6 +8,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Despesas" />
   <link rel="apple-touch-icon" href="icon-192.png" />
+  
+  <!-- Novas tags de ícone para o navegador -->
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <link rel="shortcut icon" type="image/png" href="icon-192.png" />
+  
   <link rel="manifest" href="manifest.json" />
   <title>Despesas Mensais</title>
   <style>
@@ -348,7 +353,6 @@
     .btn-secondary { background-color: #e5e7eb; color: #182033; }
     .btn-danger { background-color: #dc2626; color: #ffffff; }
 
-    /* Acessibilidade: foco visível */
     button:focus-visible,
     input:focus-visible,
     select:focus-visible,
@@ -951,7 +955,7 @@
               item.valoresPorMes[key] = valor;
             } else {
               item.valor = valor;
-              item.valoresPorMes = {}; // Limpa overrides anteriores
+              item.valoresPorMes = {};
             }
           } else {
             item.valor = valor;
@@ -986,29 +990,59 @@
       });
     });
 
-    // ---------- Exportação Automática ----------
+    // ---------- Exportação Definitiva (Share Nativo + Base64) ----------
 
-    exportarBtn.addEventListener("click", () => {
+    exportarBtn.addEventListener("click", async () => {
       const dados = localStorage.getItem(STORAGE_KEY) || "[]";
-      
-      // Cria o arquivo JSON
-      const blob = new Blob([dados], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      
-      // Cria um link invisível para forçar o download
-      const a = document.createElement("a");
-      a.href = url;
-      
-      // Define o nome do arquivo com a data do dia
       const dataAtual = new Date().toISOString().slice(0, 10);
-      a.download = `backup-despesas-${dataAtual}.json`;
-      
-      document.body.appendChild(a);
-      a.click();
-      
-      // Limpa a memória depois do download
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const nomeArquivo = `backup-despesas-${dataAtual}.json`;
+
+      // 1. Tenta Compartilhamento Nativo do Android
+      if (navigator.share && navigator.canShare) {
+        try {
+          const blob = new Blob([dados], { type: "application/json" });
+          const file = new File([blob], nomeArquivo, { type: "application/json" });
+          
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: 'Backup de Despesas',
+              text: 'Salve no Drive ou envie para você mesmo.'
+            });
+            return; // Se compartilhou com sucesso, encerra o código aqui.
+          }
+        } catch (error) {
+          // Se o usuário cancelou o compartilhamento, não faz nada e nem tenta baixar
+          if (error.name === 'AbortError') return;
+        }
+      }
+
+      // 2. Forçar download via Data URI (Contorna o bloqueio do Android WebView)
+      try {
+        const bytes = new TextEncoder().encode(dados);
+        const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
+        const base64 = btoa(binString);
+        
+        const dataUri = `data:application/json;base64,${base64}`;
+        
+        const a = document.createElement("a");
+        a.href = dataUri;
+        a.download = nomeArquivo;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (err) {
+        // 3. Fallback final para navegadores Desktop
+        const blob = new Blob([dados], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = nomeArquivo;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
     });
 
     // ---------- Importação ----------

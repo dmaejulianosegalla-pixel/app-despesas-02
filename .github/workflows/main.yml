@@ -2,8 +2,8 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main", "master" ] # Roda sempre que você enviar código
-  workflow_dispatch: # Permite rodar manualmente clicando em um botão
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,7 +17,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '22'
-        cache: 'npm'
 
     - name: Configurar Java (JDK 21)
       uses: actions/setup-java@v4

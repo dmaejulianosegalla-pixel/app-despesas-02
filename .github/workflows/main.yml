@@ -30,7 +30,8 @@ jobs:
     - name: Preparar arquivos web na pasta www
       run: |
         mkdir -p www
-        cp index.html manifest.json sw.js icon-192.png icon-512.png www/
+        cp index.html manifest.json sw.js www/
+        cp *.png www/ || true  # O '|| true' impede que o build falhe se não houver PNGs na raiz
 
     - name: Adicionar plataforma Android
       run: npx cap add android

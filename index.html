@@ -458,19 +458,6 @@
     </div>
   </div>
 
-  <!-- Modal de Exportação -->
-  <div id="export-modal" class="custom-modal-overlay">
-    <div class="custom-modal-box" style="max-width: 450px;">
-      <h3>Código do Backup</h3>
-      <p>Copie o texto abaixo ou cole num ficheiro .json para restaurar mais tarde:</p>
-      <textarea id="export-textarea" rows="6" readonly style="width: 100%; font-size: 12px; font-family: monospace; padding: 8px; border-radius: 8px; border: 1px solid #d8deea; resize: none;"></textarea>
-      <div class="custom-modal-buttons" style="margin-top: 12px;">
-        <button id="btn-copy-backup" class="btn-primary" type="button">Copiar Texto</button>
-        <button id="btn-close-export" class="btn-secondary" type="button">Fechar</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Modal Genérico de Alerta -->
   <div id="alert-modal" class="custom-modal-overlay">
     <div class="custom-modal-box">
@@ -963,9 +950,8 @@
             if (soEsteMes) {
               item.valoresPorMes[key] = valor;
             } else {
-              // Correção do bug: limpa TODOS os overrides ao escolher "todos os meses"
               item.valor = valor;
-              item.valoresPorMes = {};
+              item.valoresPorMes = {}; // Limpa overrides anteriores
             }
           } else {
             item.valor = valor;
@@ -1000,45 +986,29 @@
       });
     });
 
-    // ---------- Exportação ----------
+    // ---------- Exportação Automática ----------
 
     exportarBtn.addEventListener("click", () => {
       const dados = localStorage.getItem(STORAGE_KEY) || "[]";
-      const exportModal = document.getElementById("export-modal");
-      const textarea = document.getElementById("export-textarea");
-
-      textarea.value = dados;
-      exportModal.classList.add("active");
-      textarea.select();
-    });
-
-    document.getElementById("btn-copy-backup").addEventListener("click", async () => {
-      const textarea = document.getElementById("export-textarea");
-      textarea.select();
-      textarea.setSelectionRange(0, 99999);
-
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(textarea.value);
-          await mostrarAlerta("Backup copiado para a área de transferência!", "Sucesso");
-        } else {
-          throw new Error("Clipboard API indisponível");
-        }
-      } catch {
-        try {
-          document.execCommand("copy");
-          await mostrarAlerta("Backup copiado!", "Sucesso");
-        } catch {
-          await mostrarAlerta(
-            "Não foi possível copiar automaticamente. Selecione e copie manualmente.",
-            "Aviso"
-          );
-        }
-      }
-    });
-
-    document.getElementById("btn-close-export").addEventListener("click", () => {
-      document.getElementById("export-modal").classList.remove("active");
+      
+      // Cria o arquivo JSON
+      const blob = new Blob([dados], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      
+      // Cria um link invisível para forçar o download
+      const a = document.createElement("a");
+      a.href = url;
+      
+      // Define o nome do arquivo com a data do dia
+      const dataAtual = new Date().toISOString().slice(0, 10);
+      a.download = `backup-despesas-${dataAtual}.json`;
+      
+      document.body.appendChild(a);
+      a.click();
+      
+      // Limpa a memória depois do download
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     });
 
     // ---------- Importação ----------

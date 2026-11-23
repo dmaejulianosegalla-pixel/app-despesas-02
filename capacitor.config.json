@@ -1,7 +1,7 @@
 {
   "appId": "com.seunome.despesas",
   "appName": "Minhas Despesas",
-  "webDir": ".",
+  "webDir": "www",
   "server": {
     "androidScheme": "https"
   }

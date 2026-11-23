@@ -1,100 +1,42 @@
-name: Gerar APK Android
+name: Deploy PWA to GitHub Pages
 
 on:
-  workflow_dispatch:
   push:
-    branches: [main]
+    branches: ["main"] # Mude para "master" se o seu repositório usar essa branch
+
+  # Permite rodar manualmente pela aba Actions
+  workflow_dispatch:
+
+# Permissões necessárias para o GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Permite apenas um deploy simultâneo
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  build-apk:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
     steps:
-      - name: Baixar repositório
+      - name: Checkout do código
         uses: actions/checkout@v4
 
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload dos arquivos do site
+        uses: actions/upload-pages-artifact@v3
         with:
-          node-version: 20
+          # Faz o upload de todos os arquivos da raiz do repositório
+          path: '.'
 
-      - name: Configurar Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Criar package.json e capacitor.config.json
-        run: |
-          cat > package.json <<'EOF'
-          {
-            "name": "minhas-despesas",
-            "version": "1.0.0",
-            "private": true,
-            "description": "Controle de despesas mensais",
-            "dependencies": {
-              "@capacitor/android": "^6.0.0",
-              "@capacitor/core": "^6.0.0"
-            },
-            "devDependencies": {
-              "@capacitor/cli": "^6.0.0"
-            }
-          }
-          EOF
-          cat > capacitor.config.json <<'EOF'
-          {
-            "appId": "com.minhasdespesas.app",
-            "appName": "Minhas Despesas",
-            "webDir": "www",
-            "server": {
-              "androidScheme": "https"
-            },
-            "android": {
-              "allowMixedContent": false
-            }
-          }
-          EOF
-
-      - name: Preparar arquivos web
-        run: |
-          mkdir -p www
-          cp index.html www/
-          cp manifest.json www/
-          cp icon-192.png www/
-          cp icon-512.png www/
-          if [ -f service-worker.js ]; then cp service-worker.js www/; fi
-
-      - name: Instalar dependências
-        run: npm install
-
-      - name: Adicionar plataforma Android
-        run: npx cap add android
-
-      - name: Sincronizar Capacitor
-        run: npx cap sync android
-
-      - name: Aplicar ícone do app
-        continue-on-error: true
-        run: |
-          if command -v convert >/dev/null 2>&1; then
-            for pair in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
-              name="${pair%%:*}"
-              size="${pair##*:}"
-              convert icon-512.png -resize "${size}x${size}" "android/app/src/main/res/mipmap-${name}/ic_launcher.png"
-              convert icon-512.png -resize "${size}x${size}" "android/app/src/main/res/mipmap-${name}/ic_launcher_round.png"
-            done
-          fi
-
-      - name: Compilar APK
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
-
-      - name: Enviar APK pronto
-        uses: actions/upload-artifact@v4
-        with:
-          name: minhas-despesas-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+      - name: Deploy para o GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

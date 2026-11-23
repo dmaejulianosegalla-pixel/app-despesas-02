@@ -31,7 +31,7 @@ jobs:
       run: |
         mkdir -p www
         cp index.html manifest.json sw.js www/
-        cp *.png www/ || true  # O '|| true' impede que o build falhe se não houver PNGs na raiz
+        cp *.png www/ || true
 
     - name: Adicionar plataforma Android
       run: npx cap add android
